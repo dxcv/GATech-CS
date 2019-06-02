@@ -25,6 +25,13 @@ GT User ID: tb34 (replace with your User ID)
 GT ID: 900897987 (replace with your GT ID)
 """
 
+def save_plot(df, filename, title="Stock prices", xlabel="Date", ylabel="Price"):
+    import matplotlib.pyplot as plt
+    """Plot stock prices with a custom title and meaningful axis labels."""
+    ax = df.plot(title=title, fontsize=12)
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+    plt.savefig(filename)
 
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -71,17 +78,17 @@ def optimize_portfolio(sd=dt.datetime(2013,1,1), ed=dt.datetime(2014,1,1), \
     prices_all = get_data(syms, dates)                  # Collect data
     prices = prices_all[syms]
 
-    prices = prices / prices.ix[0, :]                   # Normalize prices
+    norm_prices = prices / prices.ix[0, :]              # Normalize prices
     initial_allocations = [1.0 / len(syms)] * len(syms) # Init allocation: Fair distribution
     ranges = [(0.0,1.0)] * len(syms)                    # Limit opmitizer to only pick values for 0 to 1
 
     # Find optimal portfolio allocation
-    allocations = spo.minimize(minimimize_sharpe_ratio, initial_allocations, args=(prices,), options={"disp": False}, \
+    allocations = spo.minimize(minimimize_sharpe_ratio, initial_allocations, args=(norm_prices,), options={"disp": False}, \
             method="SLSQP", bounds=ranges, constraints = ({ 'type': 'eq', 'fun': lambda inputs: inputs.sum() - 1 }))
     allocations = allocations['x']
 
     # With the chosen allocation distribution, compute portfolio statistics
-    daily_allocated_portfolio_total = rebalance_portfolio(prices, allocations, 1, True)
+    daily_allocated_portfolio_total = rebalance_portfolio(norm_prices, allocations, 1, True)
     daily_returns, cumulative_return, mean, std, sharpe_ratio = get_portfolio_statistics(daily_allocated_portfolio_total)
 
     # Compare daily portfolio value with SPY using a normalized plot
@@ -89,10 +96,36 @@ def optimize_portfolio(sd=dt.datetime(2013,1,1), ed=dt.datetime(2014,1,1), \
         prices_spy = prices_all["SPY"]
         normalized_spy = prices_spy / prices_spy[0]
         dftemp = pd.concat([daily_allocated_portfolio_total, normalized_spy], keys=['Optimized Portfolio', 'SPY'], axis=1)
-        plot_data(dftemp, title='Optimized Portfolio vs S&P500')
+        save_plot(dftemp, 'chart.png', ylabel='Normalized Price', title='Optimized Portfolio vs S&P500')
         pass
 
     return allocations, cumulative_return, mean, std, sharpe_ratio
+
+def assess_portfolio(sd = dt.datetime(2008,1,1), ed = dt.datetime(2009,1,1), \
+    syms = ['GOOG','AAPL','GLD','XOM'], \
+    allocs=[0.1,0.2,0.3,0.4], \
+    sv=1000000, rfr=0.0, sf=252.0, \
+    gen_plot=False):
+
+    # Read in adjusted closing prices for given symbols, date range
+    dates = pd.date_range(sd, ed)
+    prices_all = get_data(syms, dates)  # automatically adds SPY
+    prices = prices_all[syms]  # only portfolio symbols
+    prices_SPY = prices_all['SPY']  # only SPY, for comparison later
+
+    # Get daily portfolio value
+    port_val = prices_SPY # add code here to compute daily portfolio values
+
+    daily_allocated_portfolio_total = rebalance_portfolio(prices, allocs)
+    daily_returns, cumulative_return, mean, std, sharpe_ratio = get_portfolio_statistics(daily_allocated_portfolio_total)
+
+    # Compare daily portfolio value with SPY using a normalized plot
+    if gen_plot:
+        # add code to plot here
+        df_temp = pd.concat([port_val, prices_SPY], keys=['Portfolio', 'SPY'], axis=1)
+        pass
+
+    return cumulative_return, mean, std, sharpe_ratio, daily_allocated_portfolio_total[-1]
 
 def test_code():
     # This function WILL NOT be called by the auto grader
@@ -103,9 +136,9 @@ def test_code():
     # Note that ALL of these values will be set to different values by
     # the autograder!
 
-    start_date = dt.datetime(2012,1,1)
-    end_date = dt.datetime(2013,1,1)
-    symbols = ['BA', 'AAPL', 'GOOG', 'INTC', 'MCD']
+    start_date = dt.datetime(2008,6,1)
+    end_date = dt.datetime(2009,6,1)
+    symbols = ['IBM', 'X', 'GLD', 'JPM']
 
     # Assess the portfolio
     allocations, cr, adr, sddr, sr = optimize_portfolio(sd=start_date, ed=end_date, syms=symbols, gen_plot=True)
