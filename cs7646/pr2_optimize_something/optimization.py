@@ -19,19 +19,10 @@ students of CS 7646 is prohibited and subject to being investigated as a
 GT honor code violation.
 
 -----do not edit anything above this line---
-
-Student Name: Tucker Balch (replace with your name)
-GT User ID: tb34 (replace with your User ID)
-GT ID: 900897987 (replace with your GT ID)
+Student Name: Sebastian De la Paz
+GT User ID: cdelpaz3
+GT ID: 902770611
 """
-
-def save_plot(df, filename, title="Stock prices", xlabel="Date", ylabel="Price"):
-    import matplotlib.pyplot as plt
-    """Plot stock prices with a custom title and meaningful axis labels."""
-    ax = df.plot(title=title, fontsize=12)
-    ax.set_xlabel(xlabel)
-    ax.set_ylabel(ylabel)
-    plt.savefig(filename)
 
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -40,6 +31,14 @@ import datetime as dt
 from util import get_data, plot_data
 import scipy.optimize as spo
 
+
+def save_plot(df, filename, title="Stock prices", xlabel="Date", ylabel="Price"):
+    import matplotlib.pyplot as plt
+    """Plot stock prices with a custom title and meaningful axis labels."""
+    ax = df.plot(title=title, fontsize=12)
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+    plt.savefig(filename)
 
 def get_portfolio_statistics(prices, yearly_samples=252, risk_free_return=0):
     daily_returns = prices / prices.shift(1) - 1
